@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUOTE GENERATOR</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            background: linear-gradient(45deg, #ff9a9e, #fad0c4, #ffecd2);
+            transition: background 0.5s ease;
+        }
+
+        .quote-box {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quote-text {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .quote-author {
+            font-style: italic;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: all 0.5s;
+        }
+
+        .btn:hover:before {
+            left: 100%;
+        }
+
+        .new-quote {
+            background-color: #ff6b6b;
+            color: white;
+        }
+
+        .share-quote {
+            background-color: #4ecdc4;
+            color: white;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            transition: all 0.5s ease;
+        }
+
+        .circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: #ff9a9e;
+            top: -50px;
+            left: -50px;
+        }
+
+        .square {
+            width: 80px;
+            height: 80px;
+            background-color: #fad0c4;
+            bottom: -40px;
+            right: -40px;
+            transform: rotate(45deg);
+        }
+
+        .triangle {
+            width: 0;
+            height: 0;
+            border-left: 60px solid transparent;
+            border-right: 60px solid transparent;
+            border-bottom: 100px solid #ffecd2;
+            top: 50%;
+            right: -60px;
+            transform: translateY(-50%);
+        }
+
+        @media (max-width: 480px) {
+            .quote-text {
+                font-size: 18px;
+            }
+
+            .quote-box {
+                margin: 0px 30px;
+            }
+
+            .buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                margin-bottom: 10px;
+                width: 80%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="quote-box">
+            <div class="shape circle"></div>
+            <div class="shape square"></div>
+            <div class="shape triangle"></div>
+            <p class="quote-text" id="quote-text"></p>
+            <p class="quote-author" id="quote-author"></p>
+            <div class="buttons">
+                <button class="btn new-quote" id="new-quote">New Quote</button>
+                <button class="btn share-quote" id="share-quote">Share Quote</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const quotes = [
+            { text: "Life is what happens when you're busy making other plans.", author: "John Lennon" },
+            { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+            { text: "In three words I can sum up everything I've learned about life: it goes on.", author: "Robert Frost" },
+            { text: "To be yourself in a world that is constantly trying to make you something else is the greatest accomplishment.", author: "Ralph Waldo Emerson" },
+            { text: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt" },
+            { text: "The only boundaries that exist are the ones you place on yourself.", author: "Alex M.Sinclair" },
+            { text: "In the quiet moments, we find the loudest truths.", author: "Harper Quinn" },
+            { text: "Dreams are the whispers of the soul, urging you toward something greater.", author: "Samuel Orton" },
+            { text: "The road to wisdom is paved with both victories and failiures.", author: "Isabella Grange" },
+            { text: "Courage isn't the absence of fear; it's the willingness to act in spite of it", author: "Marcus Blackwood" },
+            { text: "Sometimes, the greatest journeys are the ones that bring you home.", author: "Clara Beaumont" },
+            { text: "Success isn't measured by what you acheive, but by how much you grow along the way.", author: "Elliot Harper" },
+            { text: "The heart knows no limits, only the strength to push beyond them.", author: "Leona Shaw" },
+            { text: "What you create today is the legacy you leave for tomorrow.", author: "Everett Kane" },
+            { text: "Life doesn't wait for you to be ready; it moves with or without your permission.", author: "Fiona Lambert" },
+            { text: "Peace isn't found in silence; it's found in understanding.", author: "Gabriel Reyes" },
+            { text: "We are all like trees, growing in different directions, but connected by the samer roots.", author: "Naomi Fisk" },
+            { text: "The real measure of success is in how many lives you touch, not how much you accumulate.", author: "Avery Collins" },
+            { text: "In every challenge lies the potential for transformation.", author: "Jasper Thompson" },
+            { text: "True strength is not the power to conquer others, but the ability to conquer oneself", author: "Lila Marlowe" }
+
+
+        ];
+
+        const quoteText = document.getElementById('quote-text');
+        const quoteAuthor = document.getElementById('quote-author');
+        const newQuoteBtn = document.getElementById('new-quote');
+        const shareQuoteBtn = document.getElementById('share-quote');
+        const container = document.querySelector('.container');
+        const shapes = document.querySelectorAll('.shape');
+
+        async function getRandomQuote() {
+            const response = await axios.get("https://api.api-ninjas.com/v1/quotes", {
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Api-Key": "A65yPM4ZInc5dUOpXnsjcg==9fRKRHZkq7UFfj32"
+                },
+
+            })
+            if (response.status == 200) {
+                const res = await response.data
+                console.log(res)
+                return res[0];
+            }
+
+
+        }
+
+        async function displayQuote() {
+
+            const { quote, author } = await getRandomQuote();
+            quoteText.textContent = `"${quote}"`;
+            quoteAuthor.textContent = `- ${author}`;
+        }
+
+        function changeBackground() {
+            const colors = ['#ff9a9e', '#fad0c4', '#ffecd2', '#a1c4fd', '#c2e9fb', '#d4fc79'];
+            const color1 = colors[Math.floor(Math.random() * colors.length)];
+            const color2 = colors[Math.floor(Math.random() * colors.length)];
+            const color3 = colors[Math.floor(Math.random() * colors.length)];
+            container.style.background = `linear-gradient(45deg, ${color1}, ${color2}, ${color3})`;
+        }
+
+        function animateShapes() {
+            shapes.forEach(shape => {
+                const randomX = Math.random() * 100 - 50;
+                const randomY = Math.random() * 100 - 50;
+                const randomRotate = Math.random() * 360;
+                shape.style.transform = `translate(${randomX}px, ${randomY}px) rotate(${randomRotate}deg)`;
+            });
+        }
+
+        newQuoteBtn.addEventListener('click', () => {
+            displayQuote();
+            changeBackground();
+            animateShapes();
+        });
+
+        shareQuoteBtn.addEventListener('click', () => {
+            const quote = quoteText.textContent;
+            const author = quoteAuthor.textContent;
+            const shareText = `${quote} ${author}`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Inspirational Quote',
+                    text: shareText,
+                })
+                    .catch(console.error);
+            } else {
+                alert('Sharing is not supported on this browser. You can copy the quote instead:\n\n' + shareText);
+            }
+        });
+
+
+        displayQuote();
+    </script>
+</body>
